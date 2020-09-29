@@ -28,3 +28,7 @@
 .botonaction{
     width: 150px;
 }
+
+.ocultarTabla{
+    display: none;
+}

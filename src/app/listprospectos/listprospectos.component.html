@@ -33,9 +33,9 @@
         </tr>
       </thead>
       <tbody>
-        <tr class="itemP" *ngFor="let prospecto of prospectos | paginate: { itemsPerPage: 5, currentPage: pagination }; let i = index" (click)="editProspecto(prospecto)">
-          <td>{{prospecto.nombre}} {{prospecto.aApellido}} {{prospecto.sApellido}}</td>
-          <td [ngStyle]='{color: prospecto.color}'>{{prospecto.estatus}}</td>
+        <tr class="itemP" *ngFor="let dato of prospectos | paginate: { itemsPerPage: 5, currentPage: pagination }; let i = index" (click)="editProspecto(dato)">
+          <td>{{dato.prospecto.nombre}} {{dato.prospecto.aApellido}} {{dato.prospecto.sApellido}}</td>
+          <td [ngStyle]='{color: dato.prospecto.color}'>{{dato.prospecto.estatus}}</td>
         </tr>
       </tbody>
     </table>

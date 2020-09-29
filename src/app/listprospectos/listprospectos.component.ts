@@ -46,6 +46,7 @@ export class ListprospectosComponent implements OnInit {
   }
 
   editProspecto(prospecto){
-    this.router.navigate(['/detalleprospecto'],{ queryParams: prospecto, skipLocationChange: true })
+    this.router.navigate(['/detalleprospecto'],
+      { queryParams: {detalles: JSON.stringify(prospecto)}, skipLocationChange: true })
   }
 }

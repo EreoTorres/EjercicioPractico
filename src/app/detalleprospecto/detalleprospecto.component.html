@@ -112,22 +112,22 @@
                 </div>
                 <div class="form-group">
                     <label for="estatus">Estatus*</label>
-                    <select class="form-control" id="estatus" formControlName="estatus">
+                    <select class="form-control" id="estatus" formControlName="estatus" [ngClass]="{ 'is-invalid active': submitted && validaF.estatus.errors }">
                         <option value="" disabled>Selecciona el nuevo estatus</option>
                         <option *ngFor="let estatus of estatusG" value="{{estatus.id}}">{{estatus.nombre}}</option>
                     </select>
                 </div>
                 <div class="form-group" *ngIf="formulario.get('estatus').value == 3">
                     <label for="observaciones">Observaciones del rechazo*</label>
-                    <textarea class="form-control" id="observaciones" formControlName="observaciones"></textarea>                    
+                    <textarea class="form-control" id="observaciones" formControlName="observaciones" [ngClass]="{ 'is-invalid active': submitted && validaF.observaciones.value == '' }"></textarea>                    
                 </div>
                 <div class="form-group">
                     <label class="label">Documentos*</label>
-                    <button type="button" class="btn btn-primary btn-sm" (click)="addItemDoc()">
+                    <button type="button" class="btn btn-primary btn-sm" (click)="addItemDoc()" *ngIf="!editando && detallesP.documentos"> 
                         <fa-icon [icon]="faPlus"></fa-icon> 
                     </button>
                 </div>
-                <div *ngIf="estatusEdit == 1">
+                <div [ngClass]='{ocultarTabla: editando}'>
                     <table class="table table-bordered">
                         <thead>
                           <tr>
@@ -151,14 +151,14 @@
                                     [ngClass]="{ 'is-invalid active': submitted && validaFDocs[i].controls.nombredoc.errors }"
                                 >
                             </td>
-                            <td>
+                            <td [ngClass]="{ 'table-danger': submitted && validaFDocs[i].controls.base64.errors }">
                                 <input 
                                     type="file" 
                                     class="form-control-file" 
+                                    accept="image/png,image/jpg,image/jpeg,application/pdf" 
                                     id="docfile" 
                                     name="docfile" 
                                     (change)="handleUpload($event,i)"
-                                    [ngClass]="{ 'is-invalid active': submitted && validaFDocs[i].controls.base64.errors }"
                                 >
                             </td>
                             <td class="options">
@@ -170,54 +170,29 @@
                         </tbody>
                     </table>    
                 </div>
-                <div *ngIf="estatusEdit != 1">
+                <div [ngClass]='{ocultarTabla: !editando}'>
                     <table class="table table-bordered">
                         <thead>
                           <tr>
                             <th width="100">#</th>
-                            <th scope="col">Nombre</th>
                             <th scope="col">Documento</th>
-                            <th scope="col">Opciones</th>
                           </tr>
                         </thead>
                         <tbody formArrayName="documentos">
-                          <tr  *ngFor="let item of formulario.get('documentos')['controls']; let i = index"  [formGroupName]="i">
+                          <tr  *ngFor="let item of detallesP.documentos; let i = index"  [formGroupName]="i">
                             <th scope="row">{{i+1}}</th>
                             <td>
-                                <input 
-                                    type="text" 
-                                    class="form-control" 
-                                    placeholder="Nombre" 
-                                    id="doc"  
-                                    name="doc" 
-                                    formControlName="doc" 
-                                    [ngClass]="{ 'is-invalid active': submitted && validaFDocs[i].controls.doc.errors }"
-                                >
-                            </td>
-                            <td>
-                                <input 
-                                    type="file" 
-                                    class="form-control-file" 
-                                    id="docfile" 
-                                    name="docfile" 
-                                    formControlName="docfile" 
-                                    [ngClass]="{ 'is-invalid active': submitted && validaFDocs[i].controls.docfile.errors }"
-                                >
-                            </td>
-                            <td class="options">
-                                <button type="button" class="btn btn-link" (click)="deleteItemDoc(i)">
-                                    <fa-icon [icon]="faTrash" class="options"></fa-icon> 
-                                </button>
+                                <a href="http://localhost:8080/prospectos/showdoc/{{item.idprospecto}}/{{item.nombre}}/{{item.formato}}" target="_blank" style="margin-right: 5px;">
+                                    {{item.nombre}}
+                                </a>
                             </td>
                           </tr>
                         </tbody>
                     </table>    
                 </div>
                 <div>
-                    <button type="submit" class="btn btn-success botonaction">Guardar</button>
-                    <a routerLink="/listprospectos">  
-                        <button type="button" class="btn btn-danger float-right botonaction">Cancelar</button>
-                    </a>
+                    <button type="submit" class="btn btn-success botonaction" [disabled]="!(estatusEdit == 1)">Guardar</button>
+                    <button type="button" class="btn btn-danger float-right botonaction" (click)="salir()">Salir</button>
                 </div>
             </form>
         </div>

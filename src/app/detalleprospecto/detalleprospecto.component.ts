@@ -4,6 +4,7 @@ import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { ValidTipoTextService } from '../servicios/validaciones/validTipoText/valid-tipo-text.service';
 import { ListprospectosService } from '../servicios/http-service/listprospectos/listprospectos.service';
 import { DetalleprospectoService } from '../servicios/http-service/detalleprospectos/detalleprospecto.service';
+import { MessagesService } from '../servicios/messages/messages.service';
 import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
@@ -19,6 +20,8 @@ export class DetalleprospectoComponent implements OnInit {
   submitted: boolean = false
   estatusG: any = [];
   estatusEdit = 1;
+  detallesP: any = [];
+  editando: boolean = false;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -26,14 +29,20 @@ export class DetalleprospectoComponent implements OnInit {
     private route: ActivatedRoute,
     public estadosHTTP: ListprospectosService,
     public DetalleService: DetalleprospectoService,
+    public MessagesService: MessagesService,
+    public router: Router
   ) {  }
 
   ngOnInit(): void {
     this.route
     .queryParams
     .subscribe(params => {
-      if(params.id){
-        this.initFormEdit(params)
+      
+      if(params.detalles){
+        this.detallesP = params.detalles
+        this.detallesP = JSON.parse(this.detallesP)
+        this.editando = true;
+        this.initFormEdit(this.detallesP.prospecto)
       }else{
         this.initFormNew()
       }
@@ -48,7 +57,7 @@ export class DetalleprospectoComponent implements OnInit {
     this.formulario = this.formBuilder.group({
       nombre: [null,[Validators.required]],
       pApellido: [null,[Validators.required]],
-      sApellido: [null,[Validators.required]],
+      sApellido: [null],
       calle: [null,Validators.required],
       numero: [null,Validators.required],
       colonia:  [null,Validators.required],
@@ -99,10 +108,13 @@ export class DetalleprospectoComponent implements OnInit {
     this.formulario.get('cp').disable()
     this.formulario.get('telefono').disable()
     this.formulario.get('rfc').disable()
-    this.formulario.get('observaciones').disable()
 
     if(this.estatusEdit != 1){
       this.formulario.get('estatus').disable()
+    }
+
+    if(this.estatusEdit == 3){
+      this.formulario.get('observaciones').disable()
     }
   }
 
@@ -111,12 +123,13 @@ export class DetalleprospectoComponent implements OnInit {
     this.estadosHTTP.getEstatus().then(data => {
       var res: any = data
       res = JSON.parse(res._body)
-
+      
       if(res.codigo == 200){
-        if(this.estatusEdit != 1){
+        if(this.editando){
+          
           for(let estatus of res.resultado){
             if(estatus.id != 1){
-              this.estatusG = estatus;
+              this.estatusG.push(estatus);
             }
           }
         }else{
@@ -143,6 +156,8 @@ export class DetalleprospectoComponent implements OnInit {
     if(this.formulario.get('documentos')['controls'].length > 1){
       this.formulario.get('documentos')['controls'].splice(id,1);
       this.formulario.get('documentos').updateValueAndValidity();
+    }else{
+      this.MessagesService.showSuccessDialog('Los documentos son obligatorios','error')
     }
   }
 
@@ -165,16 +180,47 @@ export class DetalleprospectoComponent implements OnInit {
   guardar(val) {
     this.submitted = true;
 
-    if (this.formulario.valid) {
+    if ((this.formulario.valid && this.estatusEdit == 1) || (val.estatus == 2) || (val.estatus == 3 && val.observaciones != '')) {
       if(!val.estatus){
         val.estatus = this.estatusEdit
       }
-       
-      this.DetalleService.setProspecto(val).then(data => {
-        console.log(val.estatus)
-      });
-    } else {
-      console.log(val.estatus)
+      
+      if(val.estatus != 1){
+        val.id = this.detallesP.prospecto.id
+      }
+
+      this.MessagesService.showLoading()
+      this.startSend(val)
+    }else {
+      this.MessagesService.showSuccessDialog('Los campos marcados con un * son requeridos','error')
+    }
+  }
+
+  startSend(val){
+    this.DetalleService.setProspecto(val).then(data => {
+      this.MessagesService.closeLoading()
+      var res: any = data
+      res = JSON.parse(res._body)
+
+      if(res.codigo == 200 ){
+        this.MessagesService.showSuccessDialog(res.mensaje)
+        this.router.navigate(['/listprospectos'])
+      }else{
+        this.MessagesService.showSuccessDialog(res.mensaje,'error')
+      }
+    });
+  }
+
+  salir(){
+    if(this.estatusEdit == 1){
+      var route = this.router
+      this.MessagesService.showConfirmDialog("Si acepta no se guardaran los cambios realizados",'warning').then(function (data){
+        if(data.isConfirmed){
+          route.navigate(['/listprospectos'])
+        }
+      })  
+    }else{
+      this.router.navigate(['/listprospectos'])
     }
   }
 }
